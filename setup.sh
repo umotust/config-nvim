@@ -14,5 +14,25 @@ case $(uname) in
     ;;
 esac
 
-ln ${LN_OPTS} $SCRIPT_DIR/after ~/.config/nvim/
-ln ${LN_OPTS} $SCRIPT_DIR/lua ~/.config/nvim/
+# Determine NeoVim config destination directory
+if [ -n "$XDG_CONFIG_HOME" ]; then
+  DST="$XDG_CONFIG_HOME/nvim"
+else
+  DST="$HOME/.config/nvim"
+fi
+
+mkdir -p "$DST"
+
+# Files/directories to link
+for item in after lua; do
+  SRC="$SCRIPT_DIR/$item"
+  DEST="$DST/$item"
+
+  # Skip if destination already points to the same source
+  if [ -e "$DEST" ] && [ "$(realpath "$SRC")" == "$(realpath "$DEST" 2>/dev/null)" ]; then
+    echo "skip: (same as target) $(basename "$DEST")"
+    continue
+  fi
+
+  ln ${LN_OPTS} "$SRC" "$DST/"
+done
